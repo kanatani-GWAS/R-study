@@ -15,3 +15,5 @@ for (i in 1:100) {
 
 print(result.even)
 print(result.odd)
+USJudgeRatings
+boxplot(USJudgeRatings, main = "USJudgeRatings.boxplot")

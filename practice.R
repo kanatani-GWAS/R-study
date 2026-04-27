@@ -17,3 +17,7 @@ print(result.even)
 print(result.odd)
 USJudgeRatings
 boxplot(USJudgeRatings, main = "USJudgeRatings.boxplot")
+
+apply(X-iris[, 1:4], MARGIN = 2, FUN = mean)
+
+List.sample<list(c(1:100),c(200:300))Lapply(list.sample,mean)Sapply(list.sample,mean)

@@ -1,0 +1,17 @@
+# 1. パッケージのインストール（まだ入っていない場合）
+if(!require(qqman)) install.packages("qqman")
+library(qqman)
+
+# 2. 練習用データ（gwasResults）を確認
+data(gwasResults)
+
+# 3. マンハッタンプロットを描画
+# png() を使うと、画面ではなくファイルとして直接保存できます
+png("my_manhattan_plot.png", width = 800, height = 600)
+manhattan(gwasResults, main = "復元したマンハッタンプロット", 
+          col = c("blue4", "orange3"), suggestiveline = -log10(1e-5), 
+          genomewideline = -log10(5e-8))
+dev.off() # 書き込み終了
+
+# 4. 画面にも表示させたい場合はこちらを実行
+manhattan(gwasResults, main = "練習用データのマンハッタンプロット")

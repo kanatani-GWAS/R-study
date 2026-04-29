@@ -1,0 +1,77 @@
+# 1. 必要なライブラリの読み込み
+if (!require("ggplot2")) install.packages("ggplot2")
+library(ggplot2)
+
+# 2. 練習用データの生成（1000個の遺伝子を想定）
+set.seed(123) # 結果を再現可能にするため
+n <- 1000
+practice_data <- data.frame(
+  gene_name = paste0("Gene_", 1:n),
+  log2FoldChange = rnorm(n, mean = 0, sd = 1.5), # 効果量のダミー
+  pvalue = runif(n, min = 0, max = 1)             # P値のダミー
+)
+
+# 有意な差があるように一部のデータを操作（グラフをそれっぽくするため）
+practice_data$pvalue[1:50] <- practice_data$pvalue[1:50] * 0.0001
+practice_data$log2FoldChange[1:50] <- practice_data$log2FoldChange[1:50] + 2
+
+# 3. ボルケーノプロットの描画
+ggplot(practice_data, aes(x = log2FoldChange, y = -log10(pvalue))) +
+  geom_point(aes(color = pvalue < 0.05 & abs(log2FoldChange) > 1), alpha = 0.5) +
+  scale_color_manual(values = c("black", "red")) + # 有意な点を赤色に
+  theme_minimal() +
+  geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "gray") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "gray") +
+  labs(title = "Practice Volcano Plot",
+       subtitle = "Red points indicate significant genes",
+       x = "Effect Size (log2 Fold Change)",
+       y = "-log10(P-value)",
+       color = "Significant")
+       # プロットを変数に格納して実行する形にする
+# 修正：31行目以降をこれに書き換える
+p <- ggplot(practice_data, aes(x = log2FoldChange, y = -log10(pvalue))) +
+  geom_point(aes(color = pvalue < 0.05 & abs(log2FoldChange) > 1), alpha = 0.5) +
+  scale_color_manual(values = c("black", "red"))
+
+print(p)
+
+# --- データの生成（これまでの続き） ---
+# (practice_data がすでに作成されていると想定します)
+
+# --- ここから差し替え ---
+
+# 1. 色分け用のカラムを追加する
+# 基準：P値 < 0.05 かつ |Log2FC| > 1
+practice_data$color_group <- "Gray" # デフォルト
+practice_data$color_group[practice_data$pvalue < 0.05 & practice_data$log2FoldChange > 1] <- "Red"   # 右上
+practice_data$color_group[practice_data$pvalue < 0.05 & practice_data$log2FoldChange < -1] <- "Blue"  # 左上
+
+# 2. ggplot2で描画（画像のデザインに寄せる）
+p_classic <- ggplot(practice_data, aes(x = log2FoldChange, y = -log10(pvalue))) +
+  # 点を描画（color_groupで色分け）
+  geom_point(aes(color = color_group), alpha = 0.6, size = 1.5) +
+  
+  # 色を具体的に指定（青、グレー、赤）
+  scale_color_manual(values = c("Blue" = "#0000FF", "Gray" = "#808080", "Red" = "#FF0000")) +
+  
+  # デザインの調整（枠線ありのシンプルなスタイル）
+  theme_bw() + 
+  theme(panel.grid = element_blank(), # グリッド線を消す
+        legend.position = "none",     # 凡例を消す（画像に合わせる）
+        axis.title = element_text(size = 12)) +
+  
+  # しきい値の点線（画像に合わせて灰色）
+  geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "black", alpha = 0.5) + # 垂直線
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "black", alpha = 0.5) + # 水平線
+  
+  # ラベルの設定（画像と統一）
+  labs(x = expression(log[2](FoldChange)), 
+       y = expression(-log[10](P-value)))
+
+# 3. 画面に表示
+print(p_classic)
+
+# 4. (必要なら) 画像ファイルとして保存
+# ggsave("classic_volcano.png", p_classic, width = 6, height = 6, dpi = 300)
+library(ggplot2)
+

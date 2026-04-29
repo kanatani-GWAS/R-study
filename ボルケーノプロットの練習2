@@ -1,0 +1,44 @@
+library(ggplot2)
+
+# 1. 検体の数を大幅に増やす (1000 -> 10000)
+set.seed(42)
+n_total <- 10000
+practice_data <- data.frame(
+  gene_name = paste0("Marker_", 1:n_total),
+  log2FoldChange = rnorm(n_total, mean = 0, sd = 1.2),
+  pvalue = runif(n_total, min = 0, max = 1)
+)
+
+# 2. 有意な点（赤と青）を増やすための調整
+# log2FoldChangeが大きく、P値が極めて小さい個体を意図的に作成
+significant_idx <- sample(1:n_total, 800) # 800個を「動く」候補にする
+
+# 右側（赤）：FoldChangeをプラスに、P値を極小に
+red_idx <- significant_idx[1:400]
+practice_data$log2FoldChange[red_idx] <- rnorm(400, mean = 2.5, sd = 0.8)
+practice_data$pvalue[red_idx] <- runif(400, 0, 0.00000001)
+
+# 左側（青）：FoldChangeをマイナスに、P値を極小に
+blue_idx <- significant_idx[401:800]
+practice_data$log2FoldChange[blue_idx] <- rnorm(400, mean = -2.5, sd = 0.8)
+practice_data$pvalue[blue_idx] <- runif(400, 0, 0.00000001)
+
+# 3. 色分け用のグループ作成
+practice_data$color_group <- "Gray"
+practice_data$color_group[practice_data$pvalue < 0.05 & practice_data$log2FoldChange > 1] <- "Red"
+practice_data$color_group[practice_data$pvalue < 0.05 & practice_data$log2FoldChange < -1] <- "Blue"
+
+# 4. 描画
+p_dense <- ggplot(practice_data, aes(x = log2FoldChange, y = -log10(pvalue))) +
+  geom_point(aes(color = color_group), alpha = 0.4, size = 0.8) + # 重なりが見えるようalphaを調整
+  scale_color_manual(values = c("Blue" = "#0000FF", "Gray" = "#808080", "Red" = "#FF0000")) +
+  theme_bw() + 
+  theme(panel.grid = element_blank(), legend.position = "none") +
+  geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "black", alpha = 0.5) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "black", alpha = 0.5) +
+  labs(x = expression(log[2](FoldChange)), 
+       y = expression(-log[10](P-value)))
+
+# 5. 表示と保存
+print(p_dense)
+ggsave("volcano_dense.png", p_dense, width = 7, height = 7, dpi = 300)

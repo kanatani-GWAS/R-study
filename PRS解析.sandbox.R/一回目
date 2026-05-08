@@ -1,0 +1,34 @@
+# --- 1. GWASデータの準備（仮の統計データ） ---
+# 本来はOpenGWASから取得した 'beta' を使います
+gwas_stat <- data.frame(
+  SNP = c("SNP1", "SNP2", "SNP3", "SNP4", "SNP5"),
+  Beta = c(0.05, -0.03, 0.12, 0.08, -0.06) # ヘモグロビン値を上げる(+)下げる(-)影響度
+)
+
+# --- 2. 個人のゲノムデータを作成（一卵性双生児の例） ---
+# 0, 1, 2 はそのSNPを持っている個数（アレル数）
+twin_genotype <- c(2, 0, 1, 2, 1) 
+
+# --- 3. PRSの計算 (Beta × 個数 の合計) ---
+# PRS = (SNP1_Beta * SNP1個数) + (SNP2_Beta * SNP2個数) + ...
+calculate_prs <- function(genotype, weights) {
+  sum(genotype * weights)
+}
+
+prs_score <- calculate_prs(twin_genotype, gwas_stat$Beta)
+
+# --- 4. 結果の表示と可視化 ---
+cat("--- PRS解析シミュレーション結果 ---\n")
+cat("個人のSNP保持数:", twin_genotype, "\n")
+cat("GWASからの重み(Beta):", gwas_stat$Beta, "\n")
+cat("算出されたPRS:", prs_score, "\n\n")
+
+# 一般集団1000人のスコア分布をシミュレーション
+all_prs <- rnorm(1000, mean = 0, sd = 0.5) 
+hist(all_prs, breaks = 30, col = "lightblue", 
+     main = "PRS Distribution in Population",
+     xlab = "Polygenic Risk Score (遺伝的スコア)", border = "white")
+
+# この個人のスコアを赤い点線で表示
+abline(v = prs_score, col = "red", lwd = 2, lty = 2) 
+text(prs_score + 0.2, 50, "Target Individual", col = "red", font = 2)

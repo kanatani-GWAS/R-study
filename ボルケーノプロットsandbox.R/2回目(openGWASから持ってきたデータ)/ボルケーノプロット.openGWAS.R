@@ -33,7 +33,7 @@ plot <- ggplot(res, aes(x = beta, y = -log10(p))) +
 # グラフを表示
 print(plot)
 
-# 完了メッセージ
+# 完了メッセージS
 message("解析が完了しました。右下の『Plots』タブを確認してください。")
 # インタラクティブなグラフとしてブラウザで表示する（より詳細に見れます）
 if (!require("plotly")) install.packages("plotly")

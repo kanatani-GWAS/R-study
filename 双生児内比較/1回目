@@ -1,0 +1,51 @@
+# --- 1. 必要なライブラリの読み込み ---
+library(ieugwasr)
+library(ggplot2)
+
+# --- 2. データの取得設定 ---
+target_id <- 'ieu-b-30'
+print("OpenGWASからデータを取得しています。少々お待ちください...")
+
+# データの取得（エラーハンドリング付き）
+res_iron <- tryCatch({
+    tophits(id = target_id)
+}, error = function(e) {
+    message("エラーが発生しました: ", e$message)
+    return(NULL)
+})
+
+# --- 3. データの加工と可視化 ---
+if (!is.null(res_iron) && nrow(res_iron) > 0) {
+    
+    print(paste("成功！有意なSNPを", nrow(res_iron), "個取得しました。"))
+    
+    # 描画用のデータ準備
+    plot_data <- res_iron
+    plot_data$logP <- -log10(plot_data$p)
+    
+    # ボルケーノプロットの描画
+    p <- ggplot(plot_data, aes(x = beta, y = logP)) +
+        geom_point(alpha = 0.5, color = "steelblue", size = 2) +
+        geom_hline(yintercept = -log10(5e-8), linetype = "dashed", color = "red", linewidth = 0.8) +
+        theme_minimal() +
+        labs(
+            title = "Volcano Plot: Iron (Hb) GWAS Hits",
+            subtitle = paste("Data source: OpenGWAS (ID:", target_id, ")"),
+            x = "Effect Size (Beta)",
+            y = "-log10(P-value)"
+        ) +
+        theme(
+            plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+            plot.subtitle = element_text(hjust = 0.5, size = 12)
+        )
+    
+    # グラフを表示
+    print(p)
+    
+    # CSV保存
+    write.csv(res_iron, "iron_hb_hits.csv", row.names = FALSE, fileEncoding = "CP932")
+    print("CSVファイル 'iron_hb_hits.csv' を保存しました。")
+
+} else {
+    print("データの取得に失敗しました。")
+}

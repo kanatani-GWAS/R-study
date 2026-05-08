@@ -1,0 +1,11 @@
+sample <- c(1, 9, 10, 100)
+sample2 <- c(3, 5, 11, 39)
+fruits<- c("apple","lemon","orange","grape")
+m.sample <- cbind(sample, sample2)
+m.sample2 <- rbind(sample,sample2)
+numbers<-c(1:8)
+m.sample3 <- matrix(numbers, nrow=4, ncol=2)
+sample.list <- list(sample, fruits, m.sample))
+samole.list2 <- list(sample,list(fruits, m.sample))
+sample.list[[1]]
+sample.list[[2]]

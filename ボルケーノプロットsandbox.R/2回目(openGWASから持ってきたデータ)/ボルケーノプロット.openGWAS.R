@@ -1,46 +1,28 @@
-# --- 1. 必要なライブラリの読み込み ---
+# --- 修正版：有意なSNPのみを取得してプロット ---
 library(tidyverse)
 library(ieugwasr)
-library(ggplot2)
-
-# --- 2. CSVファイルの読み込み（ファイル選択画面が開きます） ---
-message("CSVファイルを選択してください...")
-file_path <- file.choose()
-gwas_list <- read.csv(file_path)
-
-# --- 3. 解析対象のIDを設定 ---
-# 先ほどのリストから東アジア人のヘモグロビン（Sakaue S, 2021）を指定
-target_id <- "ebi-a-GCST90018737"
-
-# --- 4. OpenGWASからデータの取得 ---
-message(paste("ID:", target_id, "のデータを取得中..."))
-res <- ieugwasr::associations(variants = NULL, id = target_id)
-
-# --- 5. ボルケーノプロットの作成 ---
-message("プロットを作成しています...")
-plot <- ggplot(res, aes(x = beta, y = -log10(p))) +
-  geom_point(alpha = 0.4, color = "darkblue") +
-  # 全ゲノム有意水準（5e-8）に赤い点線を引く
-  geom_hline(yintercept = -log10(5e-8), linetype = "dashed", color = "red") + 
-  theme_minimal() +
-  labs(title = paste("Volcano Plot:", target_id),
-       subtitle = "Trait: Hemoglobin (East Asian / Sakaue S 2021)",
-       x = "Effect Size (Beta)",
-       y = "-log10(P-value)") +
-  theme(plot.title = element_text(hjust = 0.5, face = "bold"),
-        plot.subtitle = element_text(hjust = 0.5))
-
-# グラフを表示
-print(plot)
-
-# 完了メッセージS
-message("解析が完了しました。右下の『Plots』タブを確認してください。")
-# インタラクティブなグラフとしてブラウザで表示する（より詳細に見れます）
-if (!require("plotly")) install.packages("plotly")
 library(plotly)
 
-p <- ggplot(res, aes(x = beta, y = -log10(p))) +
-  geom_point(alpha = 0.4, color = "darkblue") +
-  theme_minimal()
+target_id <- "ebi-a-GCST90018737"
 
-ggplotly(p) # これを実行するとブラウザが立ち上がります
+message("有意なSNP（Top Hits）を取得中...")
+# 全データではなく、有意水準(5e-8)を満たすSNPのみを取得
+res_top <- ieugwasr::tophits(id = target_id)
+
+# データの確認
+if (nrow(res_top) > 0) {
+  message(paste(nrow(res_top), "件の有意なSNPが見つかりました。"))
+  
+  # プロット作成
+  p <- ggplot(res_top, aes(x = beta, y = -log10(p), text = rsid)) +
+    geom_point(alpha = 0.6, color = "darkblue") +
+    geom_hline(yintercept = -log10(5e-8), linetype = "dashed", color = "red") + 
+    theme_minimal() +
+    labs(title = paste("Volcano Plot (Top Hits):", target_id),
+         subtitle = "Trait: Hemoglobin (Sakaue S, 2021)")
+
+  # インタラクティブ表示
+  ggplotly(p)
+} else {
+  message("有意なSNPが見つかりませんでした。IDが正しいか確認してください。")
+}

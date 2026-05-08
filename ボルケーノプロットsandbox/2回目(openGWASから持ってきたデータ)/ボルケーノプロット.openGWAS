@@ -1,0 +1,18 @@
+# 必要なライブラリ
+# install.packages("ggplot2")
+library(ggplot2)
+
+# OpenGWASからデータを取得 (例: フェリチン ieu-b-5115)
+gwas_data <- ieugwasr::associations(variant = NULL, id = "ieu-b-5115")
+
+# ボルケーノプロットの描画
+ggplot(gwas_data, aes(x = beta, y = -log10(p))) +
+  geom_point(alpha = 0.4, color = "grey") +
+  geom_point(data = subset(gwas_data, p < 5e-8), color = "red") + # 有意なSNPを赤く
+  theme_minimal() +
+  labs(title = "Volcano Plot: Ferritin",
+       x = "Effect Size (Beta)",
+       y = "-log10(P-value)") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_hline(yintercept = -log10(5e-8), color = "blue", linetype = "dashed")
+  

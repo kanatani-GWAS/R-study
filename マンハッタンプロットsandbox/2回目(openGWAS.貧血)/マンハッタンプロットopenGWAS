@@ -1,0 +1,23 @@
+# 1. ライブラリの読み込み
+library(qqman)
+
+# 2. データの読み込み（パスをR用に修正済みです）
+# 変数名を df_gwas にすることで、Rの標準関数 df() との衝突を避けます
+df_gwas <- read.csv("C:/Users/daiya/Desktop/R-study/マンハッタンプロットsandbox/opengwas.io_2026-05-08T01-36-42.csv")
+
+# 3. データの先頭を表示して、正しく読み込めたか確認
+# ここで表形式のデータが表示されれば成功です
+print(head(df_gwas))
+
+# 4. 列名の確認
+# ここで表示される列名（CHR, BP, P, SNPなど）を下のmanhattan関数に指定します
+print(names(df_gwas))
+
+# 5. マンハッタンプロットの描画
+# ※もしエラーが出る場合は、下の "chromosome" などを手順4で確認した列名に書き換えてください
+manhattan(df_gwas, 
+          chr = "chromosome", 
+          bp = "position", 
+          p = "p", 
+          snp = "rsid",
+          main = "Manhattan Plot: Anemia GWAS")

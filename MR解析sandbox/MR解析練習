@@ -1,0 +1,66 @@
+# --- 1. ライブラリ読み込み ---
+library(TwoSampleMR)
+library(ieugwasr)
+library(ggplot2)
+
+# --- 2. 認証設定 (必ず最初に実行！) ---
+# さきほど取得したトークンをここに貼り付けてください
+Sys.setenv(OPENGWAS_JWT = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImFwaS1qd3QiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJhcGkub3Blbmd3YXMuaW8iLCJhdWQiOiJhcGkub3Blbmd3YXMuaW8iLCJzdWIiOiJkYWl5YW1vbmQua2luZ0BnbWFpbC5jb20iLCJpYXQiOjE3NzgxNDE4NTQsImV4cCI6MTc3OTM1MTQ1NH0.LgQKHikg5jYWzR3YjZW_vf6aBj1PpCFQwv23yBy7Y6-bNnbl3z2HZzOIhqVLhOElM5j5jbXgWceP3Qd5iX2J0qsXL_r6SHI1M1UsHkRWQXqJLg5kpHCIcx02Fh30NAkSt4devvZOX8ewL8kE_fqvxBICvXyb-MAaIFnMDISj2t5SUqayRqBBbQ8xXugImAIv2-qTRZ6TsnjkF93ByGnf5hopMxGb_MdDAW6UaFa31SAHemlX82M9TFaLEbNvm_vv1-XIT3TR1IuoB5o71QNaBzrMRwcwXLbXM_05xFHc0iHJ2cnDecBJgTecq5tEo5L4iGEBOb2yDVrCOCdz8ACDNg")
+# 認証が通っているかテスト
+message("認証チェック中...")
+print(ieugwasr::user())
+
+# --- 3. データの取得 ---
+# 曝露データ: BMI (ieu-a-2)
+message("曝露データを取得中...")
+exposure_dat <- extract_instruments(outcomes = 'ieu-a-2')
+
+# 結果データ: 冠動脈疾患 (ieu-a-7)
+message("結果データを取得中...")
+outcome_dat <- extract_outcome_data(
+  snps = exposure_dat$SNP,
+  outcomes = 'ieu-a-7'
+)
+
+# --- 4. 解析の実行 ---
+message("データを調和中...")
+dat <- harmonise_data(exposure_dat, outcome_dat)
+
+message("MR解析を実行中...")
+res <- mr(dat)
+
+# --- 5. 結果の表示と保存 ---
+print(res)
+
+# 散布図の作成と保存
+plot_scatter <- mr_scatter_plot(res, dat)
+ggsave("mr_scatter_plot.png", plot_scatter[[1]], width = 7, height = 5)
+message("完了！ 散布図を保存しました。")
+# 曝露(Exposure): BMI
+exposure_dat <- extract_instruments(outcomes = 'ieu-a-2')
+
+# 結果(Outcome): 鉄欠乏性貧血 (ieu-b-4912)
+outcome_dat <- extract_outcome_data(
+  snps = exposure_dat$SNP,
+  outcomes = 'ieu-b-4912'
+)
+# --- 視覚化の実行 ---
+
+# 1. 散布図 (Scatter plot)
+# 各SNPの曝露への効果(x軸)と結果への効果(y軸)をプロットし、回帰直線を引きます
+p1 <- mr_scatter_plot(res, dat)
+ggsave("plot_scatter_anemia.png", p1[[1]], width = 7, height = 5)
+
+# 2. フォレストプロット (Forest plot)
+# 各SNPごとの因果効果の推定値を並べて表示します
+res_single <- mr_singlesnp(dat)
+p2 <- mr_forest_plot(res_single)
+ggsave("plot_forest_anemia.png", p2[[1]], width = 7, height = 9)
+
+# 3. リーブワンアウト解析 (Leave-one-out plot)
+# 特定の1つのSNPに結果が引きずられていないか（頑健性）を確認します
+res_loo <- mr_leaveoneout(dat)
+p3 <- mr_leaveoneout_plot(res_loo)
+ggsave("plot_loo_anemia.png", p3[[1]], width = 7, height = 9)
+
+message("3種類のグラフを保存しました。左側のファイル一覧を確認してください。")
